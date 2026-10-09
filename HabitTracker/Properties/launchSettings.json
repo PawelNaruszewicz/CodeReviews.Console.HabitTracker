@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "HabitTracker": {
+      "commandName": "Project",
+      "workingDirectory": "E:\\Nauka\\CodeReviews.Console.HabitTracker"
+    }
+  }
+}
