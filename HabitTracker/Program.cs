@@ -52,6 +52,7 @@
                     case "0":
                         Console.WriteLine("Closing the application.");
                         closeApp = true;
+                        Environment.Exit(0);
                         break;
                     case "1":
                         ViewAllRecords();
@@ -59,12 +60,12 @@
                     case "2":
                         InsertRecord();
                         break;
-                    //case "3":
-                    //    DeleteRecord();
-                    //    break;
-                    //case "4":
-                    //    UpdateRecord();
-                    //    break;
+                    case "3":
+                        DeleteRecord();
+                        break;
+                    case "4":
+                        UpdateRecord();
+                        break;
                     default:
                         Console.WriteLine("Invalid Command. Please type a number from 0 to 4.\n");
                         break;
@@ -112,9 +113,62 @@
                 Console.WriteLine($"{data.Id} - {data.Date.ToString("dd-MM-yyyy")} - Quantity: {data.Quantity}");
             }
             Console.WriteLine("---------------------------");
-            Console.WriteLine("Press any button to continue");
-            Console.ReadKey();
+        }
+        private static void DeleteRecord()
+        {
+            Console.Clear();
+            ViewAllRecords();
 
+            int recordId = GetNumberInput("Please type the Id of the record you want to delete or press 0 to go back to Main Menu");
+
+            using SqliteConnection? connection = new SqliteConnection("Data Source=Habit-Tracker.db");
+            connection.Open();
+
+            SqliteCommand command = connection.CreateCommand();
+            command.CommandText = $"DELETE from drinking_water WHERE Id ='{recordId}'";
+            
+            int rowCount = command.ExecuteNonQuery();
+
+            if(rowCount ==0)
+            {
+                Console.WriteLine($"Record with Id {recordId} doesn't exit.");
+                DeleteRecord();
+            }
+            Console.WriteLine($"Record with {recordId} has been deleted");
+
+            connection.Close();
+            GetUserInput();
+        }
+        private static void UpdateRecord()
+        {
+            Console.Clear();
+            ViewAllRecords();
+
+            var recordId = GetNumberInput("Please type Id of the record you would liek to update. Type 0 to go back to Main menu");
+
+            using SqliteConnection? connection = new SqliteConnection("Data Source=Habit-Tracker.db");
+            connection.Open();
+
+            SqliteCommand checkCommand = connection.CreateCommand();
+            checkCommand.CommandText = $"SELECT EXISTS(SELECT 1 FROM drinking_water WHERE Id = {recordId})";
+            int checkQuery = Convert.ToInt32(checkCommand.ExecuteScalar());
+
+            if(checkQuery ==0)
+            {
+                Console.WriteLine($"Record with Id {recordId} doesn't exist.");
+                connection.Close();
+                UpdateRecord();
+            }
+
+            string date = GetDateInput();
+
+            int quantity = GetNumberInput("Plaese insert number of glasses or other measure of your choice(no decimals allowed");
+            
+            SqliteCommand command = connection.CreateCommand();
+            command.CommandText = $"UPDATE drinking_water SET date ='{date}', quantity ={quantity} WHERE Id = {recordId}";
+            
+            command.ExecuteNonQuery();
+            connection.Close();
         }
         private static void InsertRecord()
         {
@@ -143,6 +197,12 @@
             {
                 GetUserInput();
             }
+            
+            while(!DateTime.TryParseExact(dateInput, "dd-MM-yy", new CultureInfo("en-US"), DateTimeStyles.None, out _))
+            {
+                Console.WriteLine("Invalid date. Format: dd-MM-yy. Type 0 to return to main menu or try again");
+                dateInput = Console.ReadLine();
+            }
 
             return dateInput;
         }
@@ -153,6 +213,12 @@
             string numberInput = Console.ReadLine();
 
             if (numberInput == "0") GetUserInput();
+
+            while(!Int32.TryParse(numberInput, out _) || Convert.ToInt32(numberInput) < 0) 
+            {
+                Console.WriteLine("Invalid number. Try again");
+                numberInput = Console.ReadLine();
+            }
 
             int finalInput = Convert.ToInt32(numberInput);
             return finalInput;
