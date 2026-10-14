@@ -4,7 +4,7 @@ namespace HabitTracker
 {
     internal class InputHandler
     {
-        private const string enterDate = "Please insert the date. Format: dd-MM-yyyy. Type 0 to return to main menu";
+        private const string enterDate = "Please insert the date. Format: dd-MM-yyyy. \nType 1 to use today's date \nType 0 to return to main menu";
         private const string invalidDate = "Invalid date. Format: dd-MM-yyyy. Type 0 to return to main menu or try again";
         private const string invalidNumber = "Invalid number. Try again";
         public string GetDateInput()
@@ -13,13 +13,14 @@ namespace HabitTracker
             string? dateInput = Console.ReadLine();
 
             if (dateInput == "0") return "0";
+            else if (dateInput == "1") dateInput = DateTime.Now.ToString("dd-MM-yyyy");
 
-            while (!DateTime.TryParseExact(dateInput, "dd-MM-yyyy", new CultureInfo("en-US"), DateTimeStyles.None, out _))
-            {
-                Console.WriteLine(invalidDate);
-                dateInput = Console.ReadLine();
-                if (dateInput == "0") return "0";
-            }
+                while (!DateTime.TryParseExact(dateInput, "dd-MM-yyyy", new CultureInfo("en-US"), DateTimeStyles.None, out _))
+                {
+                    Console.WriteLine(invalidDate);
+                    dateInput = Console.ReadLine();
+                    if (dateInput == "0") return "0";
+                }
 
             return dateInput;
         }

@@ -54,21 +54,31 @@
                         break;
                     case "1":
                         records.ViewAllRecords();
+                        pressAnyButton();
                         break;
                     case "2":
                         records.InsertRecord();
+                        pressAnyButton();
                         break;
                     case "3":
                         records.DeleteRecord();
+                        pressAnyButton();
                         break;
                     case "4":
                         records.UpdateRecord();
+                        pressAnyButton();
                         break;
                     default:
                         Console.WriteLine("Invalid Command. Please type a number from 0 to 4.\n");
                         break;
                 }
             }
+        }
+        private static void pressAnyButton()
+        {
+            Console.WriteLine("Press any button to continue");
+            Console.ReadKey();
+            Console.Clear();
         }
     }
 }

@@ -26,7 +26,8 @@ namespace HabitTracker
             connection.Open();
 
             SqliteCommand command = connection.CreateCommand();
-            command.CommandText = $"DELETE from drinking_water WHERE Id ='{recordId}'";
+            command.CommandText = $"DELETE from drinking_water WHERE Id = @recordId";
+            command.Parameters.AddWithValue("@recordId", recordId);
 
             int rowCount = command.ExecuteNonQuery();
 
@@ -53,7 +54,9 @@ namespace HabitTracker
 
             SqliteCommand command = connection.CreateCommand();
             command.CommandText =
-                $"INSERT INTO drinking_water(date, quantity) VALUES ('{date}', {quantity})";
+                $"INSERT INTO drinking_water(date, quantity) VALUES (@date, @quantity)";
+            command.Parameters.AddWithValue("@date", date);
+            command.Parameters.AddWithValue("@quantity", quantity);
 
             command.ExecuteNonQuery();
 
@@ -71,7 +74,9 @@ namespace HabitTracker
             connection.Open();
 
             SqliteCommand checkCommand = connection.CreateCommand();
-            checkCommand.CommandText = $"SELECT EXISTS(SELECT 1 FROM drinking_water WHERE Id = {recordId})";
+            checkCommand.CommandText = $"SELECT EXISTS(SELECT 1 FROM drinking_water WHERE Id = @recordId)";
+            checkCommand.Parameters.AddWithValue("@recordId", recordId);
+
             int checkQuery = Convert.ToInt32(checkCommand.ExecuteScalar());
 
             if (checkQuery == 0)
@@ -89,7 +94,10 @@ namespace HabitTracker
             if (quantity == 0) return;
 
             SqliteCommand command = connection.CreateCommand();
-            command.CommandText = $"UPDATE drinking_water SET date ='{date}', quantity ={quantity} WHERE Id = {recordId}";
+            command.CommandText = $"UPDATE drinking_water SET date = @date, quantity = @quantity WHERE Id = @recordId";
+            command.Parameters.AddWithValue("@date", date);
+            command.Parameters.AddWithValue("@quantity", quantity);
+            command.Parameters.AddWithValue("@recordId", recordId);
 
             command.ExecuteNonQuery();
             connection.Close();
