@@ -1,6 +1,5 @@
 ﻿using Microsoft.Data.Sqlite;
 using System.Globalization;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HabitTracker
 {
@@ -10,7 +9,9 @@ namespace HabitTracker
         private const string idToUpdate = "Please type Id of the record you would like to update. Type 0 to go back to Main menu";
         private const string idToDelete = "Please type the Id of the record you want to delete or press 0 to go back to Main Menu";
         private const string numberOfGlasses = "Please insert number of glasses or other measure of your choice (no decimals allowed)";
+
         private InputHandler inputHandler;
+        private int currentHabitId = 1;
         public Records()
         {
             inputHandler = new InputHandler();
@@ -27,8 +28,9 @@ namespace HabitTracker
             connection.Open();
 
             SqliteCommand command = connection.CreateCommand();
-            command.CommandText = $"DELETE from drinking_water WHERE Id = @recordId";
+            command.CommandText = $"DELETE from records WHERE Id = @recordId AND HabitId = @habitId";
             command.Parameters.AddWithValue("@recordId", recordId);
+            command.Parameters.AddWithValue("@habitId", currentHabitId);
 
             int rowCount = command.ExecuteNonQuery();
 
@@ -55,9 +57,10 @@ namespace HabitTracker
 
             SqliteCommand command = connection.CreateCommand();
             command.CommandText =
-                $"INSERT INTO drinking_water(date, quantity) VALUES (@date, @quantity)";
+                $"INSERT INTO records(Date, QUANTITY, HabitId) VALUES (@date, @quantity, @habitId)";
             command.Parameters.AddWithValue("@date", date);
             command.Parameters.AddWithValue("@quantity", quantity);
+            command.Parameters.AddWithValue("@habitId", currentHabitId);
 
             command.ExecuteNonQuery();
 
@@ -75,8 +78,9 @@ namespace HabitTracker
             connection.Open();
 
             SqliteCommand checkCommand = connection.CreateCommand();
-            checkCommand.CommandText = $"SELECT EXISTS(SELECT 1 FROM drinking_water WHERE Id = @recordId)";
+            checkCommand.CommandText = $"SELECT EXISTS(SELECT 1 FROM records WHERE Id = @recordId AND HabitId = @habitId)";
             checkCommand.Parameters.AddWithValue("@recordId", recordId);
+            checkCommand.Parameters.AddWithValue("@habitId", currentHabitId);
 
             int checkQuery = Convert.ToInt32(checkCommand.ExecuteScalar());
 
@@ -95,7 +99,7 @@ namespace HabitTracker
             if (quantity == 0) return;
 
             SqliteCommand command = connection.CreateCommand();
-            command.CommandText = $"UPDATE drinking_water SET date = @date, quantity = @quantity WHERE Id = @recordId";
+            command.CommandText = $"UPDATE records SET date = @date, quantity = @quantity WHERE Id = @recordId";
             command.Parameters.AddWithValue("@date", date);
             command.Parameters.AddWithValue("@quantity", quantity);
             command.Parameters.AddWithValue("@recordId", recordId);
@@ -112,9 +116,10 @@ namespace HabitTracker
 
             SqliteCommand command = connection.CreateCommand();
             command.CommandText =
-                $"SELECT * FROM drinking_water";
+                $"SELECT * FROM records WHERE HabitId = @habitId";
+            command.Parameters.AddWithValue("@habitId", currentHabitId);
 
-            List<DrinkingWater> tableData = new List<DrinkingWater>();
+            List<RecordModel> tableData = new List<RecordModel>();
 
             SqliteDataReader reader = command.ExecuteReader();
 
@@ -123,7 +128,7 @@ namespace HabitTracker
                 while (reader.Read())
                 {
                     tableData.Add(
-                        new DrinkingWater
+                        new RecordModel
                         {
                             Id = reader.GetInt32(0),
                             Date = DateTime.ParseExact(reader.GetString(1), "dd-MM-yyyy", new CultureInfo("en-US")),
@@ -139,7 +144,7 @@ namespace HabitTracker
             connection.Close();
 
             Console.WriteLine("---------------------------");
-            foreach (DrinkingWater data in tableData)
+            foreach (RecordModel data in tableData)
             {
                 Console.WriteLine($"{data.Id} - {data.Date.ToString("dd-MM-yyyy")} - Quantity: {data.Quantity}");
             }
@@ -161,14 +166,63 @@ namespace HabitTracker
 
                 SqliteCommand command = connection.CreateCommand();
                 command.CommandText =
-                    $"INSERT INTO drinking_water(date, quantity) VALUES (@date, @quantity)";
+                    $"INSERT INTO records(Date, QUANTITY, HabitId) VALUES (@date, @quantity, @habitId)";
                 command.Parameters.AddWithValue("@date", date);
                 command.Parameters.AddWithValue("@quantity", Random.Shared.Next(0, 100));
+                command.Parameters.AddWithValue("@habitId", currentHabitId);
 
                 command.ExecuteNonQuery();
             }
             connection.Close();
 
+        }
+        public bool SelectCurrentHabit()
+        {
+            bool habitExists = false;
+            while (!habitExists)
+            {
+                Console.Clear();
+
+                using SqliteConnection? connection = new SqliteConnection(dataSource);
+                connection.Open();
+
+                SqliteCommand command = connection.CreateCommand();
+                command.CommandText = "SELECT Id, Name, Unit from habits";
+
+                using SqliteDataReader reader = command.ExecuteReader();
+                Console.WriteLine("Available habits");
+                Console.WriteLine("-----------------");
+
+                while (reader.Read())
+                {
+                    Console.WriteLine($"ID: {reader.GetInt32(0)} - {reader.GetString(1)} - {reader.GetString(2)}");
+                }
+                Console.WriteLine("-----------------");
+
+                int inputId = inputHandler.GetNumberInput("Type the ID of the habit you want to select or 0 if you want to go back:");
+                if (inputId == 0) return false;
+
+                SqliteCommand checkCommand = connection.CreateCommand();
+                checkCommand.CommandText = "SELECT EXISTS (SELECT 1 FROM habits WHERE Id = @habitsId)";
+                checkCommand.Parameters.AddWithValue("@habitsId", inputId);
+
+                int exists = Convert.ToInt32(checkCommand.ExecuteScalar());
+
+                if (exists == 1)
+                {
+                    currentHabitId = inputId;
+                    habitExists = true;
+                    Console.WriteLine($"Habit {currentHabitId} selected successfully!");
+                }
+                else
+                {
+                    Console.WriteLine($"\nHabit with ID {inputId} does not exist. Try again.");
+                    Console.WriteLine("Press any key to continue...");
+                    Console.ReadKey();
+                }
+                connection.Close();
+            }
+            return true;
         }
     }
 }

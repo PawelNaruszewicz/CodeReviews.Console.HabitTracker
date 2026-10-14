@@ -1,6 +1,6 @@
 ﻿namespace HabitTracker
 {
-    internal class DrinkingWater
+    internal class RecordModel
     {
         public int Id { get; set; }
         public DateTime Date { get; set; }
