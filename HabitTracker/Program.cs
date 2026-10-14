@@ -41,6 +41,7 @@
                 Console.WriteLine("Type 2 to Insert Record.");
                 Console.WriteLine("Type 3 to Delete Record.");
                 Console.WriteLine("Type 4 to Update Record.");
+                Console.WriteLine("Type 5 to Seed Random Data");
                 Console.WriteLine("---------------------------\n");
 
                 string? commandInput = Console.ReadLine();
@@ -66,6 +67,10 @@
                         break;
                     case "4":
                         records.UpdateRecord();
+                        pressAnyButton();
+                        break;
+                    case "5":
+                        records.SeedRecordsData();
                         pressAnyButton();
                         break;
                     default:

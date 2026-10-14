@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
 using System.Globalization;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HabitTracker
 {
@@ -143,6 +144,31 @@ namespace HabitTracker
                 Console.WriteLine($"{data.Id} - {data.Date.ToString("dd-MM-yyyy")} - Quantity: {data.Quantity}");
             }
             Console.WriteLine("---------------------------");
+        }
+        public void SeedRecordsData()
+        {
+            int numberOfRecordsToAdd = inputHandler.GetNumberInput("Input the number of records you want to add");
+            if (numberOfRecordsToAdd == 0) return;
+
+            using SqliteConnection? connection = new SqliteConnection(dataSource);
+            connection.Open();
+
+            for (int i = 0; i < numberOfRecordsToAdd; i++)
+            {
+                DateTime start = new DateTime(1995, 1, 1);
+                int range = (DateTime.Today - start).Days;
+                string date = start.AddDays(Random.Shared.Next(range)).ToString("dd-MM-yyyy");
+
+                SqliteCommand command = connection.CreateCommand();
+                command.CommandText =
+                    $"INSERT INTO drinking_water(date, quantity) VALUES (@date, @quantity)";
+                command.Parameters.AddWithValue("@date", date);
+                command.Parameters.AddWithValue("@quantity", Random.Shared.Next(0, 100));
+
+                command.ExecuteNonQuery();
+            }
+            connection.Close();
+
         }
     }
 }
